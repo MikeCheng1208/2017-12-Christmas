@@ -7,6 +7,7 @@ import SetModel from "lib/SetModel";
 import BoxBufferCreate from "lib/BoxBufferCreate";
 import Text2d from "lib/Text2d";
 import CloudCreate from "lib/CloudCreate";
+import Snowfor from "lib/Snowfor";
 import mike from "lib/mike";
 import fonts from "fonts/DFLiShuW7-B5_Regular.json";
 // Physijs(THREE);
@@ -16,7 +17,6 @@ import fonts from "fonts/DFLiShuW7-B5_Regular.json";
 // var ObjMtlLoader = require("obj-mtl-loader");
 // OBJLoader(THREE);
 // OBJMTLLoader(THREE);
-
 const treeObjurl = "model/whiteTree.obj"
 const treeMtlurl = "model/whiteTree.mtl"
 const cloudObjurl = "model/cloud.obj"
@@ -34,6 +34,7 @@ export default {
             ambientLightSet: null,
             controls: null,
             cubeBox: null,
+            Snow: null,
         };
     },
     methods:{
@@ -72,7 +73,7 @@ export default {
         },
         planeSet(){
             //地板
-            this.planeGeometry = new THREE.PlaneGeometry(2000, 2000, 32);
+            this.planeGeometry = new THREE.CircleBufferGeometry(2500, 8);
             this.material = new THREE.MeshLambertMaterial({side: THREE.BackSide, color:0x006AC6});
             this.mesh = new THREE.Mesh(this.planeGeometry, this.material);
             this.mesh.position.set(0, 0, 0);
@@ -99,16 +100,12 @@ export default {
             this.controls.target.set(0, 60, 0);
             this.controls.update();
         },
-        renderAnim(){
-            this.renderer.render(this.scene, this.camera);
-            requestAnimationFrame(this.renderAnim);
-        },
         text2dSet(font){
             let text = Text2d(font);
             this.scene.add(text);
         },
         textLoaderXhr(xhr){
-            console.log((xhr.loaded/xhr.total * 100) + '% loaded' );
+            console.log((xhr.loaded/xhr.total * 100)+'%');
         },
         cloudSet(){
             //雲模型載入
@@ -128,20 +125,32 @@ export default {
                 { x:-280, y:150, z:80},
                 { x:0, y:180, z:0}
             );
+            const cloud3 = CloudCreate(result, 0.7, 
+                { x:280, y:150, z:80},
+                { x:0, y:180, z:0}
+            );
             this.scene.add(cloud1);
             this.scene.add(cloud2);
+            this.scene.add(cloud3);
+        },
+        snowSet(){
+            this.Snow = new Snowfor(this.scene, 300);
+        },
+        renderAnim(){
+            this.Snow.SnowDownAmin(this.scene);
+            this.renderer.render(this.scene, this.camera);
+            requestAnimationFrame(this.renderAnim);
         }
-    },
-    created(){
     },
     mounted(){
         THREE.Cache.enabled = true;
         this.scene = new THREE.Scene();
-
+        this.scene.fog = new THREE.FogExp2( 0xffffff, 0.0005 );
         this.fontLoader = new THREE.FontLoader();
         this.fontLoader.load('fonts/DFLiShuW7-B5_Regular.json', font=> {
             this.text2dSet(font);
         },this.textLoaderXhr);
+        this.snowSet();
         this.cloudSet();
         this.loadObjModel();
         this.ambientlightSet();
@@ -149,7 +158,8 @@ export default {
         this.planeSet();
         this.cameraSet();
         this.rendererSet();
-        // 座標軸を表示
+
+        // 座標軸表示
         let axes = new THREE.AxesHelper(95);
         this.scene.add(axes);
 
@@ -166,5 +176,13 @@ export default {
     </div>
 </template>
 <style lang='stylus' scoped>
-
+    #word{
+        width 100%
+        height 100%
+        canvas{
+            display block
+            width 100%
+            height auto
+        }
+    }
 </style>
