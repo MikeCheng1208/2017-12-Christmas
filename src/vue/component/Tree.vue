@@ -25,7 +25,7 @@ const cloudMtlurl = "model/cloud.mtl"
 export default {
     data(){
         return {
-            isDebug: true,
+            isDebug: false,
             scene: null,
             camera: null,
             renderer: null,
@@ -212,16 +212,33 @@ export default {
         },
         sparkSet(){
             //閃光星星
-            let size = mike.getRandom(5, 7);
-            this.makeTexture = MakeTexture(10);
+            let size = mike.getRandom(3, 6);
+            this.makeTexture = MakeTexture(20);
             this.makeTexture.position.set(0, 0, 0);
             this.scene.add(this.makeTexture);
-            for (let s = 0; s < this.makeTexture.children.length; s++) {
-                let delayTime = mike.getRandom(1, 6);
-                TweenMax.to(this.makeTexture.children[s].scale, 1, {x: size, y: size, z: size, repeat:-1});
-            }
+            setInterval(()=>{
+                let o = [
+                    mike.getRandom(0, this.makeTexture.children.length-1),
+                    mike.getRandom(0, this.makeTexture.children.length-1),
+                    mike.getRandom(0, this.makeTexture.children.length-1),
+                    mike.getRandom(0, this.makeTexture.children.length-1),
+                    mike.getRandom(0, this.makeTexture.children.length-1),
+                    mike.getRandom(0, this.makeTexture.children.length-1),
+                ]
+                this.sparkAminateOpen(o[0]);
+                this.sparkAminateOpen(o[1]);
+                this.sparkAminateOpen(o[2]);
+                this.sparkAminateOpen(o[3]);
+                this.sparkAminateOpen(o[4]);
+                this.sparkAminateOpen(o[5]);
+            },500);
         },
-        sparkAminate(){
+        sparkAminateOpen(s){
+            let size = mike.getRandom(3, 8);
+            this.makeTexture.children[s].scale.set(size, size, size);
+            setTimeout(() => {
+                this.makeTexture.children[s].scale.set(0.01, 0.01, 0.01);
+            }, 400);
         },
         objAmimate(){
             let time = 160;
@@ -272,6 +289,7 @@ export default {
         this.fontLoader.load('fonts/DFLiShuW7-B5_Regular.json', font=> {
             this.text2dSet(font);
             this.objAmimate();
+            this.sparkSet();
         },this.textLoaderXhr);
         this.snowSet();
         this.cloudSet();
@@ -279,8 +297,6 @@ export default {
         this.ambientlightSet();
         this.boxBufferSet();
         this.planeSet();
-
-        this.sparkSet();
 
         this.cameraSet();
         this.rendererSet();

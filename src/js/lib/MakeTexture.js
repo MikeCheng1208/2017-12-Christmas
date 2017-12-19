@@ -6,6 +6,7 @@ function MakeTexture(int) {
     let ballMaterial = new THREE.SpriteMaterial( { map: texture} );
     let startMin = -30;
     let startMax = 30;
+    ballMaterial.opacity = 0.9;
     for (let i = 0; i < int; i++) {
         let size = 0.01;
         let sizeMax = mike.getRandom(5, 7);
