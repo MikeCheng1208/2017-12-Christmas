@@ -25,14 +25,18 @@ const cloudMtlurl = "model/cloud.mtl"
 export default {
     data(){
         return {
-            isDebug: false,
+            isDebug: true,
             scene: null,
             camera: null,
             renderer: null,
             planeGeometry: null,
             material: null,
             mesh: null,
+            keyWord: null, 
             tree: null, 
+            treeModel: null, 
+            treeShadow: null, 
+            boxBuffer: null, 
             ambientLightSet: null,
             controls: null,
             cubeBox: null,
@@ -55,17 +59,22 @@ export default {
             });
         },
         modelSet(result){
+            let treeObject = new THREE.Object3D;
             //樹 模型呈現
             let om = SetModel(result);
             this.tree = new THREE.Mesh(om.geometry, om.threeMaterialsArray);
+
             this.tree.scale.set(20, 20, 20);
-            // this.tree.scale.set(1, 1, 1);
-            this.tree.position.set(0, 38, 0);
-            this.scene.add(this.tree);
+            // this.tree.position.set(0, 38, 0);
+            this.tree.position.set(0, 0, 0);
+
+            treeObject.add(this.tree);
+            this.scene.add(treeObject);
+            treeObject.position.set(0, 0, 0);
+            treeObject.scale.set(0.01, 0.01, 0.01);
+
+            this.treeModel = treeObject;
             this.shadowSet();
-
-            // TweenMax.to(this.tree.scale, 1, {x:20,y:20,z:20});
-
         },
         shadowSet(){
             //樹 的影子
@@ -77,12 +86,13 @@ export default {
                 side: THREE.BackSide
             });
             mtl.opacity = 0.3;
-
             let shadow = new THREE.Mesh( geometry, mtl);
             shadow.position.set(-26, 0.2, 16);
             shadow.rotation.set(Math.PI / 2, 0, Math.PI / 3);
-            shadow.scale.set(1.3,1.6,1);
-            this.scene.add(shadow);
+            // shadow.scale.set(1.3,1.6,1);
+            shadow.scale.set(0.01, 0.01, 0.01);
+            this.treeShadow = shadow;
+            this.scene.add(this.treeShadow);
         },
         ambientlightSet(){
             // 環境光
@@ -122,6 +132,8 @@ export default {
         text2dSet(font){
             let text = Text2d(font);
             this.scene.add(text);
+            text.scale.set(0.01, 0.01, 0.01);
+            this.keyWord = text; 
         },
         textLoaderXhr(xhr){
             console.log((xhr.loaded/xhr.total * 100)+'%');
@@ -144,13 +156,8 @@ export default {
                 { x:-280, y:150, z:80},
                 { x:0, y:180, z:0}
             );
-            const cloud3 = CloudCreate(result, 0.7, 
-                { x:280, y:150, z:80},
-                { x:0, y:180, z:0}
-            );
             this.scene.add(cloud1);
             this.scene.add(cloud2);
-            this.scene.add(cloud3);
         },
         snowSet(){
             this.Snow = new Snowfor(this.scene, 300);
@@ -180,10 +187,35 @@ export default {
                 'images/user.png',
                 'images/user.png'
             ];
-            BoxBufferCreate(this.scene, texture);
+            this.boxBuffer = BoxBufferCreate(this.scene, texture);
+            for (let s = 0; s < this.boxBuffer.children.length; s++) {
+                if(this.boxBuffer.children[s].name =="cb"){
+                    this.boxBuffer.children[s].position.y = -2;
+                }
+            }
         },
-        pyBodies(){
+        objAmimate(){
+            let time = 160;
+            TweenMax.to(this.treeModel.scale, 1, {x:1,y:1,z:1, ease: Elastic.easeOut.config(0.8, 0.3)});
+            TweenMax.to(this.treeModel.children[0].position, 1, {y:38,ease: Elastic.easeOut.config(0.8, 0.3)});
 
+            TweenMax.to(this.treeShadow.scale, 1, {x:1.3,y:1.6,z:1, ease: Elastic.easeOut.config(0.8, 0.3)});
+            TweenMax.to(this.keyWord.scale, 1, {x:1,y:1,z:1, ease: Elastic.easeOut.config(0.8, 0.3)});
+            for (let s = 0; s < this.boxBuffer.children.length; s++) {
+                if(this.boxBuffer.children[s].name =="cb"){
+                    setTimeout(() => {
+                        TweenMax.to(this.boxBuffer.children[s].position, 1, {y:5, ease: Elastic.easeOut.config(1, 0.3)});
+                        TweenMax.to(this.boxBuffer.children[s].scale, 1, {x:1,y:1,z:1, ease: Elastic.easeOut.config(1, 0.3)});
+                    }, time * s);
+                }
+            }
+            for (let s = 0; s < this.boxBuffer.children.length; s++) {
+                if(this.boxBuffer.children[s].name =="sd"){
+                    setTimeout(() => {
+                        TweenMax.to(this.boxBuffer.children[s].scale, 1, {x:0.6,y:0.8,z:1, ease: Elastic.easeOut.config(1, 0.3)});
+                    }, time * s);
+                }
+            }
         }
     },
     mounted(){
@@ -194,6 +226,7 @@ export default {
         this.fontLoader = new THREE.FontLoader();
         this.fontLoader.load('fonts/DFLiShuW7-B5_Regular.json', font=> {
             this.text2dSet(font);
+            this.objAmimate();
         },this.textLoaderXhr);
         this.snowSet();
         this.cloudSet();

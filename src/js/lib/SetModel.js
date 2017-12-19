@@ -9,7 +9,8 @@ function SetModel(result) {
     var facesMaterialsIndex = result.facesMaterialsIndex;
     var materials = result.materials;
     
-    for(var i = 0; i < vertices.length; ++i) {
+    let verticesLength = vertices.length;
+    for(let i = 0; i < verticesLength; ++i) {
         geometry.vertices.push(
         new THREE.Vector3(vertices[i][0], vertices[i][1], vertices[i][2])
         )
@@ -19,7 +20,8 @@ function SetModel(result) {
         for(var k = 0; k < facesMaterialsIndex.length; ++k) {
             var materialName = facesMaterialsIndex[k].materialName;
             var currentMatIndex = 0;
-            for(var p = 0; p < materials.length; ++p) {
+            let materialsLength = materials.length;
+            for(var p = 0; p < materialsLength; ++p) {
                 if(materials[p].name === materialName) {
                 currentMatIndex = p;
                 }
@@ -48,7 +50,8 @@ function SetModel(result) {
             }
         }
     }else {
-        for(var i = 0; i < faces.length; ++i) {
+        let facesLength = faces.length;
+        for(var i = 0; i < facesLength; ++i) {
             for(var j = 1; j <= faces[i].indices.length-2; ++j) {
                 var face = new THREE.Face3(faces[i].indices[0]-1, faces[i].indices[j]-1, faces[i].indices[j+1]-1);
                 geometry.faces.push(face);
@@ -57,7 +60,8 @@ function SetModel(result) {
     }
     var threeMaterialsArray = [];
     if(materials) {
-        for(var i = 0; i < materials.length; ++i) {
+        let materialsLength = materials.length;
+        for(var i = 0; i < materialsLength; ++i) {
             var matData = materials[i];
             var mat = new THREE.MeshLambertMaterial();
             mat.color = new THREE.Color(matData.diffuse[0], matData.diffuse[1], matData.diffuse[2]);
