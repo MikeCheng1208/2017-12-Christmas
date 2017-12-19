@@ -1,12 +1,12 @@
 import * as THREE from 'three'
-function Text2d(font) {
+function Text2d(font, txt) {
     let xMid, text;
     let textShape = new THREE.BufferGeometry();
     let matLite = new THREE.MeshBasicMaterial( {
         color: 0xffffff,
         side: THREE.DoubleSide
     });
-    let shapes = font.generateShapes("爸", 17, 1);
+    let shapes = font.generateShapes(txt, 17, 1);
     let geometry = new THREE.ShapeGeometry(shapes);
     geometry.computeBoundingBox();
     xMid = - 0.5 * ( geometry.boundingBox.max.x - geometry.boundingBox.min.x );
