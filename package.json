@@ -27,6 +27,7 @@
     "imagemin-jpegtran": "^5.0.2",
     "imagemin-pngquant": "^5.0.0",
     "loader-utils": "^1.1.0",
+    "matter-js": "^0.14.0",
     "node-sass": "^4.5.3",
     "obj-mtl-loader": "0.0.5",
     "postcss-loader": "^2.0.6",

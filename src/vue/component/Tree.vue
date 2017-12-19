@@ -1,10 +1,7 @@
 <script>
 import * as THREE from 'three'
-
-import * as Physijs from 'lib/physi'
-import * as physijs_worker from 'lib/physijs_worker'
-import * as ammo from 'lib/ammo'
-
+import {TweenMax, Power2, TimelineLite} from "gsap";
+// import Matter from "matter-js";
 import assert from "assert";
 import ObjMtlLoader from "obj-mtl-loader";
 import OrbitControls from'three-orbitcontrols';
@@ -15,11 +12,6 @@ import CloudCreate from "lib/CloudCreate";
 import Snowfor from "lib/Snowfor";
 import mike from "lib/mike";
 import fonts from "fonts/DFLiShuW7-B5_Regular.json";
-
-Physijs.scripts.worker = physijs_worker;  
-Physijs.scripts.ammo = ammo;  
-
-// Physijs(THREE);
 // import OrbitControls from "lib/OrbitControls.js";
 // import OBJLoader from "three-obj-loader";
 // import OBJMTLLoader from "three-objmtll-loader";
@@ -33,6 +25,7 @@ const cloudMtlurl = "model/cloud.mtl"
 export default {
     data(){
         return {
+            isDebug: false,
             scene: null,
             camera: null,
             renderer: null,
@@ -46,24 +39,13 @@ export default {
             Snow: null,
             mouseX: 0, 
             mouseY: 0,
-            mouseX2: 0, 
-            mouseY2: 0,
+            mouseX2: 100, 
+            mouseY2: 100,
             windowHalfX: window.innerWidth / 2,
-			windowHalfY: window.innerHeight / 2
+            windowHalfY: window.innerHeight / 2,
         };
     },
     methods:{
-        boxBufferSet(){
-            //方塊
-            let texture = [
-                'images/user.png',
-                'images/user.png',
-                'images/user.png',
-                'images/user.png',
-                'images/user.png'
-            ];
-            BoxBufferCreate(this.scene, texture);
-        },
         loadObjModel(){
             //樹模型載入
             let OBJMTLLoader = new ObjMtlLoader();
@@ -73,16 +55,20 @@ export default {
             });
         },
         modelSet(result){
-            //模型呈現
+            //樹 模型呈現
             let om = SetModel(result);
             this.tree = new THREE.Mesh(om.geometry, om.threeMaterialsArray);
             this.tree.scale.set(20, 20, 20);
+            // this.tree.scale.set(1, 1, 1);
             this.tree.position.set(0, 38, 0);
             this.scene.add(this.tree);
             this.shadowSet();
+
+            // TweenMax.to(this.tree.scale, 1, {x:20,y:20,z:20});
+
         },
         shadowSet(){
-            //樹的影子
+            //樹 的影子
             let shadowTexture = new THREE.TextureLoader().load("images/shadow2.png");
             let geometry = new THREE.PlaneBufferGeometry(25.6, 51.2, 1);
             let mtl = new THREE.MeshBasicMaterial({
@@ -127,10 +113,11 @@ export default {
             this.renderer = new THREE.WebGLRenderer({canvas: document.getElementById("myCanvas"), antialias: true});
             this.renderer.setClearColor( 0x006AC6);
             this.renderer.setSize(window.innerWidth, window.innerHeight);
-
-            // this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-            // this.controls.target.set(0, 60, 0);
-            // this.controls.update();
+            if(this.isDebug){
+                this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+                this.controls.target.set(0, 60, 0);
+                this.controls.update();
+            }
         },
         text2dSet(font){
             let text = Text2d(font);
@@ -169,11 +156,11 @@ export default {
             this.Snow = new Snowfor(this.scene, 300);
         },
         renderAnim(){
-            this.camera.position.x += ( this.mouseX2 - this.camera.position.x ) * 0.01;
-            this.camera.position.y += ( this.mouseY2 - this.camera.position.y ) * 0.01;
-
-            this.camera.rotation.y -= ( this.mouseY2 - this.camera.position.y ) * 0.000008;
-
+            if(!this.isDebug){
+                this.camera.position.x += ( this.mouseX2 - this.camera.position.x ) * 0.01;
+                this.camera.position.y += ( this.mouseY2 - this.camera.position.y ) * 0.01;
+                this.camera.rotation.y -= ( this.mouseY2 - this.camera.position.y ) * 0.000008;
+            }
             this.Snow.SnowDownAmin(this.scene);
             this.renderer.render(this.scene, this.camera);
             requestAnimationFrame(this.renderAnim);
@@ -181,13 +168,27 @@ export default {
         onDocumentMouseMove(e){
             // this.mouseX = e.clientX - this.windowHalfX;
             // this.mouseY = e.clientY - this.windowHalfY;
-
             this.mouseX2 = e.clientX * 0.1 + this.windowHalfX * 0.1;
             this.mouseY2 = (e.clientY + this.windowHalfY) * 0.1;
+        },
+        boxBufferSet(){
+            //方塊
+            let texture = [
+                'images/user.png',
+                'images/user.png',
+                'images/user.png',
+                'images/user.png',
+                'images/user.png'
+            ];
+            BoxBufferCreate(this.scene, texture);
+        },
+        pyBodies(){
+
         }
     },
     mounted(){
         THREE.Cache.enabled = true;
+
         this.scene = new THREE.Scene();
         this.scene.fog = new THREE.FogExp2( 0xffffff, 0.0005 );
         this.fontLoader = new THREE.FontLoader();
@@ -199,17 +200,20 @@ export default {
         this.loadObjModel();
         this.ambientlightSet();
         this.boxBufferSet();
+
         this.planeSet();
         this.cameraSet();
         this.rendererSet();
 
-        // 座標軸表示
-        let axes = new THREE.AxesHelper(95);
-        this.scene.add(axes);
 
         requestAnimationFrame(this.renderAnim);
         window.addEventListener('resize', this.resize);
-        document.addEventListener('mousemove', this.onDocumentMouseMove);
+        
+        if(!this.isDebug) return document.addEventListener('mousemove', this.onDocumentMouseMove);
+        // 座標軸表示
+        let axes = new THREE.AxesHelper(95);
+        this.scene.add(axes);
+        
     }
 };
 
