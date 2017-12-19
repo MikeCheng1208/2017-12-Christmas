@@ -1,5 +1,10 @@
 <script>
 import * as THREE from 'three'
+
+import * as Physijs from 'lib/physi'
+import * as physijs_worker from 'lib/physijs_worker'
+import * as ammo from 'lib/ammo'
+
 import assert from "assert";
 import ObjMtlLoader from "obj-mtl-loader";
 import OrbitControls from'three-orbitcontrols';
@@ -10,6 +15,10 @@ import CloudCreate from "lib/CloudCreate";
 import Snowfor from "lib/Snowfor";
 import mike from "lib/mike";
 import fonts from "fonts/DFLiShuW7-B5_Regular.json";
+
+Physijs.scripts.worker = physijs_worker;  
+Physijs.scripts.ammo = ammo;  
+
 // Physijs(THREE);
 // import OrbitControls from "lib/OrbitControls.js";
 // import OBJLoader from "three-obj-loader";
@@ -35,6 +44,12 @@ export default {
             controls: null,
             cubeBox: null,
             Snow: null,
+            mouseX: 0, 
+            mouseY: 0,
+            mouseX2: 0, 
+            mouseY2: 0,
+            windowHalfX: window.innerWidth / 2,
+			windowHalfY: window.innerHeight / 2
         };
     },
     methods:{
@@ -64,7 +79,24 @@ export default {
             this.tree.scale.set(20, 20, 20);
             this.tree.position.set(0, 38, 0);
             this.scene.add(this.tree);
+            this.shadowSet();
+        },
+        shadowSet(){
+            //樹的影子
+            let shadowTexture = new THREE.TextureLoader().load("images/shadow2.png");
+            let geometry = new THREE.PlaneBufferGeometry(25.6, 51.2, 1);
+            let mtl = new THREE.MeshBasicMaterial({
+                map: shadowTexture,
+                transparent: true,
+                side: THREE.BackSide
+            });
+            mtl.opacity = 0.3;
 
+            let shadow = new THREE.Mesh( geometry, mtl);
+            shadow.position.set(-26, 0.2, 16);
+            shadow.rotation.set(Math.PI / 2, 0, Math.PI / 3);
+            shadow.scale.set(1.3,1.6,1);
+            this.scene.add(shadow);
         },
         ambientlightSet(){
             // 環境光
@@ -96,9 +128,9 @@ export default {
             this.renderer.setClearColor( 0x006AC6);
             this.renderer.setSize(window.innerWidth, window.innerHeight);
 
-            this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-            this.controls.target.set(0, 60, 0);
-            this.controls.update();
+            // this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+            // this.controls.target.set(0, 60, 0);
+            // this.controls.update();
         },
         text2dSet(font){
             let text = Text2d(font);
@@ -137,9 +169,21 @@ export default {
             this.Snow = new Snowfor(this.scene, 300);
         },
         renderAnim(){
+            this.camera.position.x += ( this.mouseX2 - this.camera.position.x ) * 0.01;
+            this.camera.position.y += ( this.mouseY2 - this.camera.position.y ) * 0.01;
+
+            this.camera.rotation.y -= ( this.mouseY2 - this.camera.position.y ) * 0.000008;
+
             this.Snow.SnowDownAmin(this.scene);
             this.renderer.render(this.scene, this.camera);
             requestAnimationFrame(this.renderAnim);
+        },
+        onDocumentMouseMove(e){
+            // this.mouseX = e.clientX - this.windowHalfX;
+            // this.mouseY = e.clientY - this.windowHalfY;
+
+            this.mouseX2 = e.clientX * 0.1 + this.windowHalfX * 0.1;
+            this.mouseY2 = (e.clientY + this.windowHalfY) * 0.1;
         }
     },
     mounted(){
@@ -164,7 +208,8 @@ export default {
         this.scene.add(axes);
 
         requestAnimationFrame(this.renderAnim);
-        window.addEventListener( 'resize', this.resize);
+        window.addEventListener('resize', this.resize);
+        document.addEventListener('mousemove', this.onDocumentMouseMove);
     }
 };
 

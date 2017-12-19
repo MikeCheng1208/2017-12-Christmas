@@ -2,11 +2,13 @@ import * as THREE from 'three'
 export default class Snowfor{
     materials = [];
     textureLoader = new THREE.TextureLoader();
-    sprite1 = this.textureLoader.load("images/f1.png");
-    sprite2 = this.textureLoader.load("images/f2.png");
+    sprite1 = this.textureLoader.load("images/snow1_m1.png");
+    sprite2 = this.textureLoader.load("images/snow2.png");
+    sprite3 = this.textureLoader.load("images/snow3_m1.png");
     parameters = [
-        [ [0.85, 0, 0.5], this.sprite1, 8 ],
-        [ [0.80, 0, 0.5], this.sprite2, 5 ]
+        [[0.85, 0, 0.5], this.sprite1, 8],
+        [[0.80, 0, 0.5], this.sprite2, 5],
+        [[0.90, 0.05, 0.5], this.sprite3, 10],
     ];
     constructor(scene, num){
         // let materials = [];

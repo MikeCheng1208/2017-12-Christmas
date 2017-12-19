@@ -116,7 +116,7 @@ const config = {
             },
             {
                 test: /\.(jpe?g|png|gif|svg)$/i,
-                use: 'url-loader?limit=2000&name=[path][name].[ext]?[hash:8]',
+                use: 'url-loader?limit=100&name=[path][name].[ext]?[hash:8]',
                 include: path.resolve('src')
             },
             {

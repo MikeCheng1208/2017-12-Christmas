@@ -7,18 +7,12 @@ import Vue from 'vue'
 import 'index.html';
 import 'css/index.styl';
 import 'user.json'; //搬 json
-
-
+/*-----------------------------------------------------------*/
 import 'model/whiteTree.obj';
 import 'model/whiteTree.mtl';
-
 import 'model/cloud.obj';
 import 'model/cloud.mtl';
-// import 'file/physi.js';
-// import 'file/physijs_worker.js';
-// import 'file/ammo.js';
-
-
+/*-----------------------------------------------------------*/
 let filename = 'mike.jpg';
 require('images/' + filename);    //打包圖片
 /*-----------------------------------------------------------*/
