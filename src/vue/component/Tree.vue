@@ -26,6 +26,7 @@ export default {
     data(){
         return {
             isDebug: false,
+            isLoadIng: false,
             scene: null,
             camera: null,
             renderer: null,
@@ -317,17 +318,37 @@ export default {
 
 <template>
     <div id="word">
+        <div v-if="isLoadIng" class="loading">
+            <h3>部落客年度代表字計算中</h3>
+            <img src="images/378.gif" alt="">
+            <p>loading...</p>
+        </div>
+        <header v-if="!isLoadIng">
+            <div class="userBlogData">
+                <img src="images/mike.jpg" alt="">
+                <div class="text">
+                    <h1>小林&郭郭的小夫妻生活</h1>
+                    <p>已加入痞客邦<span>2365</span>天</p>
+                </div>
+            </div>
+            <a id="fbShare">Share</a>
+            <a v-if="false" id="createTree">製作你的聖誕樹</a>
+        </header>
         <canvas id="myCanvas"></canvas>
+        <footer v-if="!isLoadIng">
+            <div class="tagBox">
+                <h3>台北</h3>
+                <h3>設計</h3>
+                <h3>潮流</h3>
+                <p>MY BLOG SEARCH FROM</p>
+            </div>
+            <div class="kmBox">
+                <div>
+                    <h1>99K</h1>
+                    <p>viewers</p>
+                </div>
+            </div>
+        </footer>
     </div>
 </template>
-<style lang='stylus' scoped>
-    #word{
-        width 100%
-        height 100%
-        canvas{
-            display block
-            width 100%
-            height auto
-        }
-    }
-</style>
+<style lang='stylus' src='css/_indexContent.styl' scoped></style>
