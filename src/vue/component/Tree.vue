@@ -26,7 +26,7 @@ export default {
     data(){
         return {
             isDebug: false,
-            isLoadIng: false,
+            isLoadIng: true,
             scene: null,
             camera: null,
             renderer: null,
@@ -55,6 +55,11 @@ export default {
             windowHalfY: window.innerHeight / 2,
             t1: new TimelineLite(),
         };
+    },
+    watch:{
+        isLoadIng(val){
+
+        }
     },
     methods:{
         loadObjModel(){
@@ -288,10 +293,13 @@ export default {
         this.scene.fog = new THREE.FogExp2( 0xffffff, 0.0005 );
         this.fontLoader = new THREE.FontLoader();
         this.fontLoader.load('fonts/DFLiShuW7-B5_Regular.json', font=> {
+            this.isLoadIng = false;
+            if(this.isLoadIng) return;
             this.text2dSet(font);
             this.objAmimate();
             this.sparkSet();
         },this.textLoaderXhr);
+        
         this.snowSet();
         this.cloudSet();
         this.loadObjModel();
