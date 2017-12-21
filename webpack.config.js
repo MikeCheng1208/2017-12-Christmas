@@ -14,7 +14,8 @@ const config = {
           'axios',
           'es6-promise'
         ],
-        index: 'index'
+        index: 'index',
+        logon: 'login',
     },
     output: {
         path: path.resolve(__dirname, 'dist'),

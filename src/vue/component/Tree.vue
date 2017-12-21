@@ -1,4 +1,10 @@
 <script>
+// import OrbitControls from "lib/OrbitControls.js";
+// import OBJLoader from "three-obj-loader";
+// import OBJMTLLoader from "three-objmtll-loader";
+// var ObjMtlLoader = require("obj-mtl-loader");
+// OBJLoader(THREE);
+// OBJMTLLoader(THREE);
 import * as THREE from 'three'
 import {TweenMax, Power2, TimelineLite} from "gsap";
 import assert from "assert";
@@ -12,12 +18,7 @@ import Snowfor from "lib/Snowfor";
 import MakeTexture from "lib/MakeTexture";
 import mike from "lib/mike";
 import fonts from "fonts/DFLiShuW7-B5_Regular.json";
-// import OrbitControls from "lib/OrbitControls.js";
-// import OBJLoader from "three-obj-loader";
-// import OBJMTLLoader from "three-objmtll-loader";
-// var ObjMtlLoader = require("obj-mtl-loader");
-// OBJLoader(THREE);
-// OBJMTLLoader(THREE);
+import MicrosoftYaHei from "fonts/MicrosoftYaHei_Bold.json"; //微軟雅黑體
 const treeObjurl = "model/whiteTree.obj"
 const treeMtlurl = "model/whiteTree.mtl"
 const cloudObjurl = "model/cloud.obj"
@@ -57,9 +58,6 @@ export default {
         };
     },
     watch:{
-        isLoadIng(val){
-
-        }
     },
     methods:{
         loadObjModel(){
@@ -218,7 +216,6 @@ export default {
         },
         sparkSet(){
             //閃光星星
-            let size = mike.getRandom(3, 6);
             this.makeTexture = MakeTexture(20);
             this.makeTexture.position.set(0, 0, 0);
             this.scene.add(this.makeTexture);
@@ -249,9 +246,10 @@ export default {
         objAmimate(){
             let time = 160;
             TweenMax.to(this.treeModel.scale,                1, {x:1, y:1, z:1, ease: Elastic.easeOut.config(0.8, 0.3)});
-            TweenMax.to(this.treeModel.children[0].position, 1, {y:38, ease: Elastic.easeOut.config(0.8, 0.3)});
+            TweenMax.to(this.treeModel.children[0].position, 1, {y:38, ease: Elastic.easeOut.config(0.8, 0.3), onComplete:()=>{
+                TweenMax.to(this.keyWord.scale, 1, {x:1, y:1, z:1, ease: Elastic.easeOut.config(0.8, 0.3)});
+            }});
             TweenMax.to(this.treeShadow.scale,               1, {x:1.3, y:1.6, z:1, ease: Elastic.easeOut.config(0.8, 0.3)});
-            TweenMax.to(this.keyWord.scale,                  1, {x:1, y:1, z:1, ease: Elastic.easeOut.config(0.8, 0.3)});
             TweenMax.to(this.cloud1.scale,                   1, {x:1, y:1, z:1, ease: Elastic.easeOut.config(0.8, 0.3)});
             TweenMax.to(this.cloud2.scale,                   1, {x:1, y:1, z:1, ease: Elastic.easeOut.config(0.8, 0.3)});
             TweenMax.to(this.cloudShadow1.scale,             1, {x:4, y:2, z:2, ease: Elastic.easeOut.config(0.8, 0.3)});
@@ -331,7 +329,7 @@ export default {
             <img src="images/378.gif" alt="">
             <p>loading...</p>
         </div>
-        <header v-if="!isLoadIng">
+        <header :class="{end: isLoadIng}">
             <div class="userBlogData">
                 <img src="images/mike.jpg" alt="">
                 <div class="text">
@@ -343,7 +341,7 @@ export default {
             <a v-if="false" id="createTree">製作你的聖誕樹</a>
         </header>
         <canvas id="myCanvas"></canvas>
-        <footer v-if="!isLoadIng">
+        <footer :class="{end: isLoadIng}">
             <div class="tagBox">
                 <h3>台北</h3>
                 <h3>設計</h3>

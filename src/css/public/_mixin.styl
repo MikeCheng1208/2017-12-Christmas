@@ -1,7 +1,15 @@
 /*
     Stylus 的 mixins 不用加 @mixins
 */
-$hideText(){
+$opacityAminate{
+    transition: opacity .3s;
+    opacity: 1;
+    &.end{
+        opacity: 0;
+    }
+}
+
+$hideText{
 	text-indent: 100%;
 	white-space: nowrap;
 	overflow: hidden;
