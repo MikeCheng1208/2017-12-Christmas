@@ -1,7 +1,14 @@
 const path = require('path');
 const webpack = require('webpack');
 const ExtractTextPlugin = require('extract-text-webpack-plugin')
-const ManifestPlugin    = require('webpack-manifest-plugin');
+const ManifestPlugin = require('webpack-manifest-plugin');
+const ENV = process.env.ENV = process.env.NODE_ENV = 'development';
+const HOST = process.env.HOST || 'localhost';
+const PORT = process.env.PORT || 3000;
+console.log('ENV:',ENV);
+console.log('HOST:',HOST);
+console.log('PORT:', PORT);
+
 const config = {
     context: path.resolve(__dirname, 'src'),
     entry: {
@@ -40,10 +47,10 @@ const config = {
             warnings: false
         },
         proxy: {
-            // '/api/*': {
-            //     target: 'http://XXX.com.tw',
-            //     changeOrigin: true,
-            // },
+            '/api/userinfo/*': {
+                target: 'https://pixmas.events.pixnet.net',
+                changeOrigin: true,
+            },
         },
     },  
     resolve: {

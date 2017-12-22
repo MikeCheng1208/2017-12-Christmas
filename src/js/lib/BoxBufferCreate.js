@@ -42,7 +42,7 @@ function BoxCreate(scene, textureArr) {
         
         let sd = new THREE.Mesh(boxshadow, mtl);
         sd.name = "sd";
-        sd.position.set(boxPos[i][0] - 9.5, 0.2, boxPos[i][2] + 1);
+        sd.position.set(boxPos[i][0] - 9.5, 0.2, boxPos[i][2] - 0.5);
         sd.rotation.set(Math.PI / 2, 0, 16);
         // sd.scale.set(0.6, 0.8, 1);
         sd.scale.set(0.01, 0.01, 1);

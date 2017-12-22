@@ -6,12 +6,14 @@
 // OBJLoader(THREE);
 // OBJMTLLoader(THREE);
 import * as THREE from 'three'
+import axios from "axios";
 import {TweenMax, Power2, TimelineLite} from "gsap";
 import assert from "assert";
 import ObjMtlLoader from "obj-mtl-loader";
 import OrbitControls from'three-orbitcontrols';
 import SetModel from "lib/SetModel";
 import BoxBufferCreate from "lib/BoxBufferCreate";
+import PointLightCreate from "lib/PointLightCreate";
 import Text2d from "lib/Text2d";
 import CloudCreate from "lib/CloudCreate";
 import Snowfor from "lib/Snowfor";
@@ -19,15 +21,20 @@ import MakeTexture from "lib/MakeTexture";
 import mike from "lib/mike";
 import fonts from "fonts/DFLiShuW7-B5_Regular.json";
 import MicrosoftYaHei from "fonts/MicrosoftYaHei_Bold.json"; //微軟雅黑體
-const treeObjurl = "model/whiteTree.obj"
-const treeMtlurl = "model/whiteTree.mtl"
-const cloudObjurl = "model/cloud.obj"
-const cloudMtlurl = "model/cloud.mtl"
+
+const fontLoad = "fonts/MicrosoftYaHei_Bold.json";
+const treeObjurl = "model/whiteTree.obj";
+const treeMtlurl = "model/whiteTree.mtl";
+const cloudObjurl = "model/cloud.obj";
+const cloudMtlurl = "model/cloud.mtl";
+const NoLightObjurl = 'model/lowpolytreeNotextureNoLight.obj';
+const NoLightMtlurl = 'model/lowpolytreeNotextureNoLight.mtl';
 export default {
     data(){
         return {
             isDebug: false,
             isLoadIng: true,
+            userNow: true,
             scene: null,
             camera: null,
             renderer: null,
@@ -54,7 +61,18 @@ export default {
             mouseY2: 100,
             windowHalfX: window.innerWidth / 2,
             windowHalfY: window.innerHeight / 2,
-            t1: new TimelineLite(),
+            urlSearch: mike.urlSearch()["user_id"],
+            reSizeWW: 0.95,
+            reSizeHH: 0.92,
+            uiData: {
+                keyWord: "",
+                userTexture: [],
+                tag: [""],
+                viewers: 0,
+                addPixnetDay: 0,
+                avatar: "",
+                blogName: "",
+            }
         };
     },
     watch:{
@@ -63,7 +81,7 @@ export default {
         loadObjModel(){
             //樹模型載入
             let OBJMTLLoader = new ObjMtlLoader();
-            OBJMTLLoader.load(treeObjurl, treeMtlurl,(err, res)=> {
+            OBJMTLLoader.load(NoLightObjurl, NoLightMtlurl,(err, res)=> {
                 if(err) return console.log('err:',err);
                 this.modelSet(res);
             });
@@ -109,19 +127,18 @@ export default {
             this.ambientLightSet = new THREE.AmbientLight(0xffffff, 1);
             this.scene.add(this.ambientLightSet);
         },
+        pointLightSet(){
+            let light = PointLightCreate(100, 200, 0, 1000);
+            this.scene.add(light);
+        },
         planeSet(){
             //地板
             this.planeGeometry = new THREE.CircleBufferGeometry(2500, 8);
-            this.material = new THREE.MeshLambertMaterial({side: THREE.BackSide, color:0x006AC6});
+            this.material = new THREE.MeshBasicMaterial({side: THREE.BackSide, color:0x006AC6});
             this.mesh = new THREE.Mesh(this.planeGeometry, this.material);
             this.mesh.position.set(0, 0, 0);
             this.mesh.rotation.set(Math.PI / 2, 0, 0);
             this.scene.add(this.mesh);
-        },
-        resize(){
-            this.camera.aspect = window.innerWidth / window.innerHeight;
-            this.camera.updateProjectionMatrix();
-            this.renderer.setSize( window.innerWidth, window.innerHeight );
         },
         cameraSet(){
             //攝影機
@@ -129,29 +146,20 @@ export default {
             this.camera.position.set(90, 70, 60);
             this.camera.lookAt(0, 60, 0);
         },
-        rendererSet(){
-            this.renderer = new THREE.WebGLRenderer({canvas: document.getElementById("myCanvas"), antialias: true});
-            this.renderer.setClearColor( 0x006AC6);
-            this.renderer.setSize(window.innerWidth, window.innerHeight);
-            if(this.isDebug){
-                this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-                this.controls.target.set(0, 60, 0);
-                this.controls.update();
-            }
-        },
         text2dSet(font){
-            let text = Text2d(font, "痞");
+            let text = Text2d(font, this.uiData.keyWord);
             this.scene.add(text);
             text.scale.set(0.01, 0.01, 0.01);
             this.keyWord = text; 
         },
         textLoaderXhr(xhr){
-            console.log((xhr.loaded/xhr.total * 100)+'%');
+            // console.log((xhr.loaded/xhr.total * 100)+'%');
+            console.log('載入中...');
         },
         cloudSet(){
             //雲模型載入
             let OBJMTLLoader = new ObjMtlLoader();
-            OBJMTLLoader.load(cloudObjurl, cloudMtlurl,(err, res)=> {
+            OBJMTLLoader.load(cloudObjurl, NoLightMtlurl,(err, res)=> {
                 if(err) return console.log('err2:',err);
                 this.modelCloudSet(res);
             });
@@ -166,6 +174,7 @@ export default {
                 { x:-280, y:150, z:80},
                 { x:0, y:180, z:0}
             );
+
             this.cloud1.scale.set(0.01,0.01,0.01);
             this.cloud2.scale.set(0.01,0.01,0.01);
             this.scene.add(this.cloud1);
@@ -200,13 +209,7 @@ export default {
         },
         boxBufferSet(){
             //方塊
-            let texture = [
-                'images/user.png',
-                'images/user.png',
-                'images/user.png',
-                'images/user.png',
-                'images/user.png'
-            ];
+            let texture = this.uiData.userTexture;
             this.boxBuffer = BoxBufferCreate(this.scene, texture);
             for (let s = 0; s < this.boxBuffer.children.length; s++) {
                 if(this.boxBuffer.children[s].name =="cb"){
@@ -257,14 +260,87 @@ export default {
             for (let s = 0; s < this.boxBuffer.children.length; s++) {
                 if(this.boxBuffer.children[s].name =="cb"){
                     setTimeout(() => {
-                        TweenMax.to(this.boxBuffer.children[s].position, 1, {y:5, ease: Elastic.easeOut.config(1, 0.3)});
-                        TweenMax.to(this.boxBuffer.children[s].scale,    1, {x:1, y:1, z:1, ease: Elastic.easeOut.config(1, 0.3)});
+                        TweenMax.to(this.boxBuffer.children[s].position, 1, {y:8, ease: Elastic.easeOut.config(1, 0.3)});
+                        TweenMax.to(this.boxBuffer.children[s].scale,    1, {x:1.5, y:1.5, z:1.5, ease: Elastic.easeOut.config(1, 0.3)});
                     }, time * s);
                 }else if(this.boxBuffer.children[s].name =="sd"){
                     setTimeout(() => {
                         TweenMax.to(this.boxBuffer.children[s].scale,    1, {x:0.6, y:0.8, z:1, ease: Elastic.easeOut.config(1, 0.3)});
                     }, time * s);
                 }
+            }
+        },
+        onDocumentMouseMove(e){
+            // this.mouseX = e.clientX - this.windowHalfX;
+            // this.mouseY = e.clientY - this.windowHalfY;
+            this.mouseX2 = e.clientX * 0.1 + this.windowHalfX * 0.1;
+            this.mouseY2 = (e.clientY + this.windowHalfY) * 0.1;
+        },
+        onDocumentTouchStart(e){
+            if (e.touches.length === 1 ) {
+                this.mouseX2 = e.touches[0].pageX - this.windowHalfX;
+                this.mouseY2 = e.touches[0].pageY -+ this.windowHalfY;
+            }
+        },
+        onDocumentTouchMove(e){
+            if ( e.touches.length === 1 ) {
+                this.mouseX2 = e.touches[0].pageX - this.windowHalfX;
+                this.mouseY2 = e.touches[0].pageY - this.windowHalfY;
+            }
+        },
+        fontLoadFn(){
+            this.fontLoader.load(fontLoad, font=> {
+                this.isLoadIng = false;
+                if(this.isLoadIng) return;
+                this.text2dSet(font);
+                this.boxBufferSet();
+                this.objAmimate();
+                this.sparkSet();
+            },this.textLoaderXhr);
+        },
+        fbShareBtnFn(){
+            let shareUrl = location.host + location.search;
+            let urlSearch = mike.urlSearch()["user_id"];
+            if(user_id != "0" && urlSearch === undefined || urlSearch === "") shareUrl = `${location.host}?user_id=${user_id}`;
+            console.log(shareUrl);
+            mike.fbShare(shareUrl);
+        },
+        webglAvailable() {
+            try {
+                var canvas = document.createElement( 'canvas' );
+                return !!( window.WebGLRenderingContext && (
+                    canvas.getContext( 'webgl' ) ||
+                    canvas.getContext( 'experimental-webgl' ) )
+                );
+            } catch ( e ) {
+                return false;
+            }
+        },
+        resize(){
+            this.OrbitControlsFn();
+            this.reSizeWW = window.innerWidth <= 640 ? 1 : 0.95;
+            this.reSizeHH = window.innerWidth <= 640 ? 1 : 0.92;
+            this.camera.aspect = window.innerWidth*this.reSizeWW / window.innerHeight*this.reSizeHH;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize( window.innerWidth*this.reSizeWW, window.innerHeight*this.reSizeHH);
+        },
+        rendererSet(){
+            this.reSizeWW = window.innerWidth <= 640 ? 1 : 0.95;
+            this.reSizeHH = window.innerWidth <= 640 ? 1 : 0.92;
+
+            if (this.webglAvailable()) {
+                console.log('WebGL');
+                this.renderer = new THREE.WebGLRenderer({canvas: document.getElementById("myCanvas"), antialias: true});
+            } else {
+                console.log('Canvas');
+                this.renderer = new THREE.CanvasRenderer({canvas: document.getElementById("myCanvas"), antialias: true});
+            }
+            this.renderer.setClearColor( 0x006AC6);
+            this.renderer.setSize(window.innerWidth * this.reSizeWW, window.innerHeight * this.reSizeHH);
+            if(this.isDebug){
+                this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+                this.controls.target.set(0, 60, 0);
+                this.controls.update();
             }
         },
         renderAnim(){
@@ -277,46 +353,74 @@ export default {
             this.renderer.render(this.scene, this.camera);
             requestAnimationFrame(this.renderAnim);
         },
-        onDocumentMouseMove(e){
-            // this.mouseX = e.clientX - this.windowHalfX;
-            // this.mouseY = e.clientY - this.windowHalfY;
-            this.mouseX2 = e.clientX * 0.1 + this.windowHalfX * 0.1;
-            this.mouseY2 = (e.clientY + this.windowHalfY) * 0.1;
+        stageSet(){
+            THREE.Cache.enabled = true;
+            this.scene = new THREE.Scene();
+            this.scene.fog = new THREE.FogExp2( 0xffffff, 0.0005 );
+            this.fontLoader = new THREE.FontLoader();
+            this.snowSet();
+            this.cloudSet();
+            this.loadObjModel();
+            this.pointLightSet();
+            this.ambientlightSet();
+            this.planeSet();
+            this.cameraSet();
+            this.rendererSet();
+            requestAnimationFrame(this.renderAnim);
+            window.addEventListener('resize', this.resize);
+            this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+            this.controls.enabled = false;
+            this.OrbitControlsFn()
+            if(!this.isDebug) {
+                document.addEventListener('mousemove', this.onDocumentMouseMove);
+                // document.addEventListener('touchstart', this.onDocumentTouchStart);
+                // document.addEventListener('touchmove', this.onDocumentTouchMove);
+                return;
+            }
+            // 座標軸表示
+            // let axes = new THREE.AxesHelper(95);
+            // this.scene.add(axes);
+        },
+        OrbitControlsFn(){
+            this.camera.position.set(90, 70, 60);
+            this.camera.lookAt(0, 60, 0);
+            if(window.innerWidth <= 640) {
+                this.isDebug =  true;
+                this.controls.target.set(0, 60, 0);
+                this.controls.update();
+                this.controls.enabled = true;
+                console.log(this.controls.enabled);
+            }else{
+                this.isDebug =  false;
+                this.controls.enabled = false;
+                this.camera.position.set(90, 70, 60);
+                this.camera.lookAt(0, 60, 0);
+                console.log(this.controls.enabled);
+            }
         }
     },
     mounted(){
-        THREE.Cache.enabled = true;
+        let userid = null;
+        let urlSearch = mike.urlSearch()["user_id"];
 
-        this.scene = new THREE.Scene();
-        this.scene.fog = new THREE.FogExp2( 0xffffff, 0.0005 );
-        this.fontLoader = new THREE.FontLoader();
-        this.fontLoader.load('fonts/DFLiShuW7-B5_Regular.json', font=> {
-            this.isLoadIng = false;
-            if(this.isLoadIng) return;
-            this.text2dSet(font);
-            this.objAmimate();
-            this.sparkSet();
-        },this.textLoaderXhr);
-        
-        this.snowSet();
-        this.cloudSet();
-        this.loadObjModel();
-        this.ambientlightSet();
-        this.boxBufferSet();
-        this.planeSet();
-
-        this.cameraSet();
-        this.rendererSet();
-
-
-        requestAnimationFrame(this.renderAnim);
-        window.addEventListener('resize', this.resize);
-        
-        if(!this.isDebug) return document.addEventListener('mousemove', this.onDocumentMouseMove);
-        // 座標軸表示
-        let axes = new THREE.AxesHelper(95);
-        this.scene.add(axes);
-        
+        this.stageSet();
+        if(user_id==="") user_id = "0";
+        if(user_id != "0" && urlSearch === undefined || urlSearch === "") userid = user_id; //透過login進來的
+        if(urlSearch != undefined && urlSearch != "") userid = urlSearch; //透過FaceBook進來的
+        // if(user_id == "0" && urlSearch === undefined || urlSearch === "") {
+            // console.error("無使用者，請轉跳至登入畫面");    
+            // location.href = "/login.php?res=nouser";
+            // return
+        // }
+        axios.get(``).then(res => {
+            this.userNow = urlSearch != user_id;
+            this.uiData = res.data.data;
+            this.fontLoadFn();
+        }).catch(err => {
+            // location.href = "/login.php?err=getdata";
+            console.log('err.response:',err.response);
+            console.error("資料抓取錯誤");
+        })
     }
 };
 
@@ -324,6 +428,7 @@ export default {
 
 <template>
     <div id="word">
+        <a class="logo"></a>
         <div v-if="isLoadIng" class="loading">
             <h3>部落客年度代表字計算中</h3>
             <img src="images/378.gif" alt="">
@@ -331,30 +436,29 @@ export default {
         </div>
         <header :class="{end: isLoadIng}">
             <div class="userBlogData">
-                <img src="images/mike.jpg" alt="">
+                <img :src="uiData.avatar" alt="">
                 <div class="text">
-                    <h1>小林&郭郭的小夫妻生活</h1>
-                    <p>已加入痞客邦<span>2365</span>天</p>
+                    <h1>{{uiData.blogName}}</h1>
+                    <p>已加入痞客邦<span>{{uiData.addPixnetDay}}</span>天</p>
                 </div>
             </div>
-            <a id="fbShare">Share</a>
-            <a v-if="false" id="createTree">製作你的聖誕樹</a>
+            <a v-if="userNow" id="fbShare" @click="fbShareBtnFn">Share</a>
+            <a v-if="!userNow" id="createTree" href="/login.php">製作你的聖誕樹</a>
         </header>
         <canvas id="myCanvas"></canvas>
         <footer :class="{end: isLoadIng}">
             <div class="tagBox">
-                <h3>台北</h3>
-                <h3>設計</h3>
-                <h3>潮流</h3>
+                <h3 v-for="(obj, idx) in uiData.tag" :key="idx">{{obj}}</h3>
                 <p>MY BLOG SEARCH FROM</p>
             </div>
             <div class="kmBox">
                 <div>
-                    <h1>99K</h1>
-                    <p>viewers</p>
+                    <h1>{{uiData.viewers}}</h1>
+                    <p>VIEWERS</p>
                 </div>
             </div>
         </footer>
+        <p class="Copyright">Copyright © 2003 - 2017 優像數位媒體科技(股)公司</p>
     </div>
 </template>
 <style lang='stylus' src='css/_indexContent.styl' scoped></style>
