@@ -13,13 +13,11 @@ const config = {
     context: path.resolve(__dirname, 'src'),
     entry: {
         vendor: [
-          'jquery',
           'vue',
-          'vue-router',
-          'vuex',
           'gsap',
           'axios',
-          'es6-promise'
+          'es6-promise',
+          'three'
         ],
         index: 'index',
         logon: 'login',
@@ -158,15 +156,10 @@ const config = {
             name: 'vendor', 
             filename: 'js/vendor.js?v=[hash:8]' 
         }),
-        new webpack.ProvidePlugin({
-            $: 'jquery',
-            jQuery: 'jquery',
-            "window.jQuery": "jquery"
-        }),
         new ManifestPlugin({
             fileName: 'client_manifest.json'
         }),
-       new webpack.LoaderOptionsPlugin({
+        new webpack.LoaderOptionsPlugin({
             vue: {
                 postcss: [require('autoprefixer')(
                     {
@@ -174,7 +167,7 @@ const config = {
                     }
                 )]
             }
-       })
+        })
     ]
 };
 
