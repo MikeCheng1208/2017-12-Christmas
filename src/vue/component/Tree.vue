@@ -299,9 +299,9 @@ export default {
             },this.textLoaderXhr);
         },
         fbShareBtnFn(){
-            let shareUrl = location.host + location.search;
+            let shareUrl = location.href;
             let urlSearch = mike.urlSearch()["user_id"];
-            if(user_id != "0" && urlSearch === undefined || urlSearch === "") shareUrl = `${location.host}?user_id=${user_id}`;
+            if(user_id != "0" && urlSearch === undefined || urlSearch === "") shareUrl = `${location.href}?user_id=${user_id}`;
             console.log(shareUrl);
             mike.fbShare(shareUrl);
         },
@@ -327,21 +327,22 @@ export default {
         rendererSet(){
             this.reSizeWW = window.innerWidth <= 640 ? 1 : 0.95;
             this.reSizeHH = window.innerWidth <= 640 ? 1 : 0.92;
-
+            let renderData = {canvas: document.getElementById("myCanvas"), antialias: true};
             if (this.webglAvailable()) {
                 console.log('WebGL');
-                this.renderer = new THREE.WebGLRenderer({canvas: document.getElementById("myCanvas"), antialias: true});
+                this.renderer = new THREE.WebGLRenderer(renderData);
             } else {
                 console.log('Canvas');
-                this.renderer = new THREE.CanvasRenderer({canvas: document.getElementById("myCanvas"), antialias: true});
+                this.renderer = new THREE.CanvasRenderer(renderData);
             }
             this.renderer.setClearColor( 0x006AC6);
             this.renderer.setSize(window.innerWidth * this.reSizeWW, window.innerHeight * this.reSizeHH);
-            if(this.isDebug){
-                this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-                this.controls.target.set(0, 60, 0);
-                this.controls.update();
-            }
+            
+            if(!this.isDebug) return 
+            this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+            this.controls.target.set(0, 60, 0);
+            this.controls.update();
+            
         },
         renderAnim(){
             if(!this.isDebug){
@@ -389,17 +390,16 @@ export default {
                 this.controls.target.set(0, 60, 0);
                 this.controls.update();
                 this.controls.enabled = true;
-                console.log(this.controls.enabled);
             }else{
                 this.isDebug =  false;
                 this.controls.enabled = false;
                 this.camera.position.set(90, 70, 60);
                 this.camera.lookAt(0, 60, 0);
-                console.log(this.controls.enabled);
             }
         }
     },
     mounted(){
+        console.log('');
         let userid = null;
         let urlSearch = mike.urlSearch()["user_id"];
 
@@ -413,7 +413,7 @@ export default {
             // return
         // }
         axios.get(``).then(res => {
-            this.userNow = urlSearch != user_id;
+            this.userNow = urlSearch == user_id;
             this.uiData = res.data.data;
             this.fontLoadFn();
         }).catch(err => {
@@ -443,7 +443,7 @@ export default {
                 </div>
             </div>
             <a v-if="userNow" id="fbShare" @click="fbShareBtnFn">Share</a>
-            <a v-if="!userNow" id="createTree" href="/login.php">製作你的聖誕樹</a>
+            <a v-if="!userNow" id="createTree" href="/index.php">製作你的聖誕樹</a>
         </header>
         <canvas id="myCanvas"></canvas>
         <footer :class="{end: isLoadIng}">
